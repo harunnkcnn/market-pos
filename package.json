@@ -1,0 +1,11 @@
+{
+  "name": "market-pos",
+  "version": "0.1.0",
+  "description": "Mahalle marketleri için barkodlu satış ekranı, stok, veresiye ve gün sonu raporu",
+  "license": "MIT",
+  "author": "Harun Kaçan (https://github.com/harunnkcnn)",
+  "scripts": {
+    "start": "npx --yes serve -l 3000 .",
+    "test": "node --test \"tests/**/*.test.js\""
+  }
+}

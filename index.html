@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>market-pos · Mahalle marketi satış ekranı</title>
+  <meta name="description" content="Mahalle marketleri için barkodlu satış ekranı, stok, veresiye ve gün sonu raporu. Tarayıcıda, internetsiz çalışır.">
+  <meta name="theme-color" content="#1f2a37">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="ust">
+    <div class="marka"><img src="assets/icon.svg" alt="" width="28" height="28"><span id="isletmeAdi">market-pos</span></div>
+    <nav class="sekmeler" role="tablist">
+      <button class="sekme aktif" data-sayfa="kasa">Kasa</button>
+      <button class="sekme" data-sayfa="urunler">Ürünler &amp; Stok</button>
+      <button class="sekme" data-sayfa="veresiye">Veresiye</button>
+      <button class="sekme" data-sayfa="raporlar">Raporlar</button>
+      <button class="sekme" data-sayfa="ayarlar">Ayarlar</button>
+    </nav>
+    <div class="durum"><span id="baglanti" class="nokta"></span><span id="saat"></span></div>
+  </header>
+
+  <!-- KASA -->
+  <main id="sayfa-kasa" class="sayfa aktif">
+    <section class="kasa-sol">
+      <form id="barkodForm" class="barkod-satir" autocomplete="off">
+        <input id="barkodGiris" placeholder="Barkod okutun ya da ürün adı yazın…" aria-label="Barkod">
+        <input id="miktarGiris" type="number" step="0.001" min="0.001" value="1" aria-label="Miktar" title="Miktar (adet / kg)">
+        <button class="btn">Ekle</button>
+      </form>
+      <div id="aramaSonuc" class="arama-sonuc" hidden></div>
+      <div id="iadeBandi" class="iade-bandi" hidden>İADE MODU · Okutulan ürünler stoka geri girer (F9 ile kapat)</div>
+      <div class="sepet-kutu">
+        <table class="tablo sepet">
+          <thead><tr><th>Ürün</th><th class="sag">Miktar</th><th class="sag">Birim</th><th class="sag">Tutar</th><th></th></tr></thead>
+          <tbody id="sepetGovde"></tbody>
+        </table>
+        <p id="sepetBos" class="bos">Sepet boş. Barkod okutun ya da sağdaki hızlı tuşları kullanın.</p>
+      </div>
+      <div id="bekleyenler" class="bekleyenler"></div>
+    </section>
+
+    <aside class="kasa-sag">
+      <div class="toplam-kutu">
+        <span>Toplam</span>
+        <strong id="toplam">0,00 ₺</strong>
+        <small id="kalemSayisi">0 kalem</small>
+      </div>
+      <div id="hizliTuslar" class="hizli"></div>
+      <div class="odeme-tuslari">
+        <button class="btn buyuk yesil" data-odeme="nakit">Nakit <kbd>F1</kbd></button>
+        <button class="btn buyuk mavi" data-odeme="kart">Kart <kbd>F2</kbd></button>
+        <button class="btn buyuk" data-odeme="parcali">Parçalı <kbd>F3</kbd></button>
+        <button class="btn buyuk turuncu" data-odeme="veresiye">Veresiye <kbd>F4</kbd></button>
+        <button class="btn" id="bekletBtn">Beklet <kbd>F8</kbd></button>
+        <button class="btn" id="iadeBtn">İade <kbd>F9</kbd></button>
+        <button class="btn kirmizi" id="iptalBtn">İptal <kbd>Esc</kbd></button>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ÜRÜNLER -->
+  <main id="sayfa-urunler" class="sayfa">
+    <div class="arac-cubugu">
+      <input id="urunAra" placeholder="Ürün ara…">
+      <label class="kontrol"><input type="checkbox" id="sadeceKritik"> Sadece kritik stok</label>
+      <span class="bosluk"></span>
+      <button class="btn" id="siparisListesiBtn">Sipariş listesi</button>
+      <button class="btn" id="topluFiyatBtn">Toplu fiyat</button>
+      <label class="btn">CSV içe aktar<input type="file" id="csvGiris" accept=".csv,text/csv" hidden></label>
+      <button class="btn" id="csvDisaBtn">CSV dışa aktar</button>
+      <button class="btn yesil" id="yeniUrunBtn">+ Yeni ürün</button>
+    </div>
+    <table class="tablo">
+      <thead><tr><th>Barkod / Terazi</th><th>Ürün</th><th>Kategori</th><th class="sag">Alış</th><th class="sag">Satış</th><th class="sag">KDV</th><th class="sag">Stok</th><th class="sag">Kritik</th><th></th></tr></thead>
+      <tbody id="urunGovde"></tbody>
+    </table>
+  </main>
+
+  <!-- VERESİYE -->
+  <main id="sayfa-veresiye" class="sayfa">
+    <div class="iki-kolon">
+      <section>
+        <div class="arac-cubugu">
+          <input id="musteriAra" placeholder="Müşteri ara…">
+          <span class="bosluk"></span>
+          <button class="btn yesil" id="yeniMusteriBtn">+ Yeni müşteri</button>
+        </div>
+        <table class="tablo">
+          <thead><tr><th>Müşteri</th><th>Telefon</th><th class="sag">Borç</th><th class="sag">Limit</th></tr></thead>
+          <tbody id="musteriGovde"></tbody>
+        </table>
+      </section>
+      <section id="musteriDetay" class="kart-kutu"><p class="bos">Detay için bir müşteri seçin.</p></section>
+    </div>
+  </main>
+
+  <!-- RAPORLAR -->
+  <main id="sayfa-raporlar" class="sayfa">
+    <div class="arac-cubugu">
+      <label>Başlangıç <input type="date" id="raporBas"></label>
+      <label>Bitiş <input type="date" id="raporBit"></label>
+      <span class="bosluk"></span>
+      <button class="btn" id="gunSonuYazdir">Gün sonu yazdır</button>
+    </div>
+    <div id="raporKartlar" class="rapor-kartlar"></div>
+    <div class="iki-kolon">
+      <section><h3>Ürün bazında satış</h3><table class="tablo"><thead><tr><th>Ürün</th><th class="sag">Miktar</th><th class="sag">Ciro</th><th class="sag">Brüt kâr</th></tr></thead><tbody id="raporUrun"></tbody></table></section>
+      <section><h3>Kategori ve kasiyer</h3><table class="tablo"><thead><tr><th>Kategori</th><th class="sag">Ciro</th></tr></thead><tbody id="raporKategori"></tbody></table>
+        <table class="tablo" style="margin-top:16px"><thead><tr><th>Kasiyer</th><th class="sag">Satış</th><th class="sag">Ciro</th></tr></thead><tbody id="raporKasiyer"></tbody></table></section>
+    </div>
+    <h3>Son satışlar</h3>
+    <table class="tablo"><thead><tr><th>Saat</th><th>Fiş</th><th class="sag">Tutar</th><th>Ödeme</th><th></th></tr></thead><tbody id="raporSatislar"></tbody></table>
+  </main>
+
+  <!-- AYARLAR -->
+  <main id="sayfa-ayarlar" class="sayfa">
+    <form id="ayarForm" class="kart-kutu form dar">
+      <h3>İşletme</h3>
+      <label>İşletme adı <input name="isletmeAdi" required></label>
+      <label>Kasiyer adı <input name="kasiyer" required></label>
+      <label>Fiş alt notu <input name="fisAltNot"></label>
+      <button class="btn yesil">Kaydet</button>
+      <hr>
+      <h3>Veri</h3>
+      <p class="not">Tüm veriler bu cihazın tarayıcısında saklanır. Düzenli yedek alın.</p>
+      <div class="satir">
+        <button type="button" class="btn" id="yedekAlBtn">Yedek al (JSON)</button>
+        <label class="btn">Yedekten yükle<input type="file" id="yedekGiris" accept=".json" hidden></label>
+        <button type="button" class="btn kirmizi" id="sifirlaBtn">Verileri sıfırla</button>
+      </div>
+      <p class="not">Bu uygulama yasal ÖKC / yazar kasa veya e-Arşiv yerine geçmez; bastığı fiş bilgi fişidir.</p>
+    </form>
+  </main>
+
+  <dialog id="modal"><form method="dialog" id="modalForm"></form></dialog>
+  <div id="bildirim" class="bildirim" role="status" aria-live="polite"></div>
+
+  <script src="js/para.js"></script>
+  <script src="js/barkod.js"></script>
+  <script src="js/sepet.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/demo.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
